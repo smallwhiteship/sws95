@@ -1,1 +1,178 @@
-test
+<html>
+<head>
+<title>SWS95 Text Encoder/Decoder</title>
+<meta charset=utf8>
+<style>
+input,textarea {
+  width: 400px;
+  height: 100px;
+}
+</style>
+<script>
+function load(){
+var abc = '`1234567890-=qwertyuiop[]\\asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:"ZXCVBNM<>?№йцукенгшщзхъёфывапролджэячсмитьбюЙЦУКЕНГШЩЗХЪЁФЫВАПРОЛДЖЭЯЧСМИТЬБЮ \n'
+
+function add(a,b) {
+  var res = []
+  for(var i=0;i<a.length;i++) {
+    res.push(a[i] + b[i]);
+  }
+  return res;
+}
+
+function mul(a,b) {
+  var res = []
+  for(var i=0;i<a.length;i++) {
+    res.push(a[i] * b[i]);
+  }
+  return res;
+}
+
+function sub(a,b) {
+  var res = []
+  for(var i=0;i<a.length;i++) {
+    res.push(a[i] - b[i]);
+  }
+  return res;
+}
+
+function div(a,b) {
+  var res = []
+  for(var i=0;i<a.length;i++) {
+    res.push(a[i] / b[i]);
+  }
+  return res;
+}
+
+function pad(v) {
+  v = v.toString();
+  while (v.length < 4) v = "0" + v;
+  return v;
+}
+
+function generat(pwd,len) {
+  var res = []
+  var o = 0
+  for(var i=0;i<len;i++) {
+    var p = pwd[(i + o) % pwd.length];
+    o += p;
+    if (o > 100) o += p * 3;
+    o %= 47;
+    var v = o + 1;
+    res.push(v);
+  }
+  res.reverse();
+  return res;
+}
+
+function encrypt(_in,_pass) {
+  var msg = []
+  var pwd = []
+  for(var i=0;i<_in.length;i++)
+    msg.push(abc.indexOf(_in[i]));
+  for(var i=0;i<_pass.length;i++)
+    pwd.push(abc.indexOf(_pass[i]));
+  var gen = generat(pwd, msg.length);
+  pwd.reverse();
+  var gen2 = generat(pwd, msg.length);
+  pwd.reverse();
+  var res = add(msg, gen);
+  var res2 = mul(res, gen2);
+  return res2;
+}
+
+function decrypt(_out,_pass) {
+  var msg = _out;
+  var pwd = []
+  for(var i=0;i<_pass.length;i++)
+    pwd.push(abc.indexOf(_pass[i]));
+  var gen = generat(pwd, msg.length);
+  pwd.reverse();
+  var gen2 = generat(pwd, msg.length);
+  pwd.reverse();
+  var res = div(msg, gen2);
+  var res2 = sub(res, gen);
+  var txt = '';
+  for (var i=0; i<res2.length; i++) {
+    if (Math.floor(res2[i]) >= abc.length || res2[i] < 0) txt += '~'
+    else txt += abc[Math.floor(res2[i])];
+  }
+  return txt;
+}
+
+function arrToTxt(arr)
+{
+  var res = '';
+  for (var i=0; i<arr.length; i++) 
+    res += pad(arr[i].toString());
+  return res;
+}
+
+function txtToArr(txt)
+{
+  var res = [];
+  var num = 0;
+  for (var i=0; i<txt.length; i++) {
+    num += Math.pow(10, 3-(i % 4)) * Number(txt[i]);
+    if ((i % 4) == 3) {
+      res.push(num);
+      num = 0;
+    }
+  }
+  return res;
+}
+
+$ = function(x) {
+  x = x.substr(1);
+  return {
+    val : function(z) {
+      var elem = document.getElementById(x);
+      if (z != undefined) elem.value = z;
+      return elem.value;
+    },
+    click : function(f) {
+      var elem = document.getElementById(x);
+      elem.onclick = f;
+    }
+  }
+}
+
+$('#in').val('decoded/input. available characters:\n' + abc);
+$('#out').val('encoded/output');
+$('#pass').val('password');
+
+$('#enc').click(function()
+{
+  $('#out').val(
+  	arrToTxt(
+    	encrypt($('#in').val(), $('#pass').val()  
+      )
+      ))
+});
+
+$('#dec').click(function()
+{
+  $('#in').val(
+  	decrypt(
+    	txtToArr(
+      	$('#out').val()), $('#pass').val()))
+});
+}
+</script>
+</head>
+<body onload=load()>
+<h1>SWS95 Encoder/Decoder</h1>
+<textarea id='in'></textarea>
+<br>
+<input id='pass'>
+<br>
+<textarea id='out'></textarea>
+<br>
+<button id='enc'>
+enc
+</button>
+<button id='dec'>
+dec
+</button>
+</body>
+</html>
